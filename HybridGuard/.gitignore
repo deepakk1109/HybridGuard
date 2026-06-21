@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+venv/
+*.onnx.bak
+.DS_Store
+*.log
+aws-credentials.txt
+.vscode/
+.idea/

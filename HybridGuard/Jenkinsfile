@@ -1,0 +1,69 @@
+// Jenkinsfile - HybridGuard CI/CD Pipeline
+// Triggered automatically via GitHub webhook on every push to main
+
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB    = credentials('dockerhub-creds')      // username + password
+        AWS          = credentials('aws-creds')            // AWS_ACCESS_KEY_ID + SECRET
+        OC_TOKEN     = credentials('openshift-token')       // OpenShift login token
+        IMAGE        = 'deepakk1109/hybridguard:latest'
+        OC_SERVER    = 'https://api.sandbox-m2.ll9k.p1.openshiftapps.com:6443'
+        NAMESPACE    = 'deepakkrishnamoorthi'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/deepakk1109/HybridGuard.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $IMAGE .'
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                sh 'echo $DOCKERHUB_PSW | docker login -u $DOCKERHUB_USR --password-stdin'
+                sh 'docker push $IMAGE'
+            }
+        }
+
+        stage('Deploy to OpenShift') {
+            steps {
+                sh 'oc login --token=$OC_TOKEN --server=$OC_SERVER'
+                sh 'oc apply -f openshift/ -n $NAMESPACE'
+                sh 'oc rollout restart deployment/hybridguard -n $NAMESPACE'
+                sh 'oc rollout status deployment/hybridguard -n $NAMESPACE --timeout=120s'
+            }
+        }
+
+        stage('Smoke Test') {
+            steps {
+                script {
+                    def route = sh(
+                        script: "oc get route hybridguard -n $NAMESPACE -o jsonpath='{.spec.host}'",
+                        returnStdout: true
+                    ).trim()
+                    sh "curl -f https://${route}/health"
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'HybridGuard deployed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed - check logs above for details.'
+        }
+        always {
+            sh 'docker logout || true'
+        }
+    }
+}

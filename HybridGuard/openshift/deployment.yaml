@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hybridguard
+  namespace: deepakkrishnamoorthi
+  labels:
+    app: hybridguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hybridguard
+  template:
+    metadata:
+      labels:
+        app: hybridguard
+    spec:
+      containers:
+        - name: hybridguard
+          image: deepakk1109/hybridguard:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: aws-config
+            - secretRef:
+                name: aws-credentials
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "250m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20

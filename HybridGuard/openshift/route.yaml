@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: hybridguard
+  namespace: deepakkrishnamoorthi
+spec:
+  to:
+    kind: Service
+    name: hybridguard
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

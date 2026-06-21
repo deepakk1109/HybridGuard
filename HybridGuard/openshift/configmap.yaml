@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-config
+  namespace: deepakkrishnamoorthi
+data:
+  AWS_REGION: "ap-south-1"
+  S3_BUCKET: "hybridguard-deepak"
+  SNS_TOPIC_ARN: "arn:aws:sns:ap-south-1:REPLACE_ACCOUNT_ID:hybridguard-alerts"

@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: hybridguard-monitor
+  namespace: deepakkrishnamoorthi
+  labels:
+    app: hybridguard
+spec:
+  selector:
+    matchLabels:
+      app: hybridguard
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

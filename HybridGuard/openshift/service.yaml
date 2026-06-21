@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hybridguard
+  namespace: deepakkrishnamoorthi
+  labels:
+    app: hybridguard
+spec:
+  selector:
+    app: hybridguard
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
