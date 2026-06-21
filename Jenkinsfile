@@ -2,8 +2,10 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_CREDS    = credentials('dockerhub-creds')
-        OPENSHIFT_TOKEN = credentials('openshift-token')
+        DOCKER_CREDS         = credentials('dockerhub-creds')
+        OPENSHIFT_TOKEN      = credentials('openshift-token')
+        // 1. Defined your OpenShift Server URL here so the variable works
+        OPENSHIFT_SERVER_URL = 'https://api.rm1.0a51.p1.openshiftapps.com:6443'
     }
 
     stages {
@@ -27,7 +29,8 @@ pipeline {
         stage('OpenShift Deploy') {
             steps {
                 echo "Deploying to OpenShift..."
-                sh "oc login --token=\$OPENSHIFT_TOKEN --server=YOUR_OPENSHIFT_SERVER_URL --insecure-skip-tls-verify"
+                // 2. Updated to use the variable properly with a backslash for shell execution
+                sh "oc login --token=\$OPENSHIFT_TOKEN --server=\$OPENSHIFT_SERVER_URL --insecure-skip-tls-verify"
                 echo "Deployed to OpenShift Successfully!"
             }
         }
