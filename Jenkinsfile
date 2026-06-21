@@ -32,7 +32,7 @@ pipeline {
     steps {
         echo "Deploying to OpenShift..."
         sh """
-          oc login --token=\$OPENSHIFT_TOKEN --server=https://api.rm1.0a51.p1.openshiftapps.com:6443 --insecure-skip-tls-verify=true
+          oc login --token=sha256~awArwFlNkyS12g8iOuYny31_vExu3uM-CWA8Fdyj8WI --server=https://api.rm1.0a51.p1.openshiftapps.com:6443
         """
         echo "Deployed to OpenShift Successfully!"
     }
