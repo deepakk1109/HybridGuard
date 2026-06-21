@@ -4,7 +4,6 @@ pipeline {
     environment {
         DOCKER_CREDS         = credentials('dockerhub-creds')
         OPENSHIFT_TOKEN      = credentials('openshift-token')
-        // 1. Defined your OpenShift Server URL here so the variable works
         OPENSHIFT_SERVER_URL = 'https://api.rm1.0a51.p1.openshiftapps.com:6443'
     }
 
@@ -26,14 +25,12 @@ pipeline {
             }
         }
 
-       stage('OpenShift Deploy') {
+        stage('OpenShift Deploy') {
             steps {
                 echo "Deploying to OpenShift..."
-                // Switched to single quotes to completely fix the trailing quote issue
                 sh 'oc login --token=$OPENSHIFT_TOKEN --server=$OPENSHIFT_SERVER_URL --insecure-skip-tls-verify'
                 echo "Deployed to OpenShift Successfully!"
             }
-        }
         }
     }
 
