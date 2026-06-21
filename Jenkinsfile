@@ -19,12 +19,14 @@ pipeline {
                 echo "Logging into Docker Hub..."
                 sh "echo \$DOCKER_CREDS_PSW | docker login -u \$DOCKER_CREDS_USR --password-stdin"
                 sh '''
-                    export DOCKER_BUILDKIT=1
-                    docker build -t deepak1109/hybridguard:latest .
+                    # Disabling buildkit to use regular engine with no cache
+                    export DOCKER_BUILDKIT=0
+                    docker build --no-cache -t deepak1109/hybridguard:latest .
                     docker push deepak1109/hybridguard:latest
                 '''
             }
         }
+        
         // stage('Docker Build & Push') {
         //     steps {
         //         echo "Logging into Docker Hub..."
