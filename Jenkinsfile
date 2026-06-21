@@ -25,15 +25,18 @@ pipeline {
             }
         }
 
-        stage('OpenShift Deploy') {
-            steps {
-                echo "Deploying to OpenShift..."
-                sh """
-  oc login --token=\$OPENSHIFT_TOKEN --server=https://api.rm1.0a51.p1.openshiftapps.com:6443 --insecure-skip-tls-verify=true
-"""
-                echo "Deployed to OpenShift Successfully!"
-            }
-        }
+       stage('OpenShift Deploy') {
+    agent {
+        docker { image 'quay.io/openshift/origin-cli:latest' }
+    }
+    steps {
+        echo "Deploying to OpenShift..."
+        sh """
+          oc login --token=\$OPENSHIFT_TOKEN --server=https://api.rm1.0a51.p1.openshiftapps.com:6443 --insecure-skip-tls-verify=true
+        """
+        echo "Deployed to OpenShift Successfully!"
+    }
+}
     }
 
     post {
