@@ -26,13 +26,14 @@ pipeline {
             }
         }
 
-        stage('OpenShift Deploy') {
+       stage('OpenShift Deploy') {
             steps {
                 echo "Deploying to OpenShift..."
-                // 2. Updated to use the variable properly with a backslash for shell execution
-                sh "oc login --token=\$OPENSHIFT_TOKEN --server=\$OPENSHIFT_SERVER_URL --insecure-skip-tls-verify"
+                // Switched to single quotes to completely fix the trailing quote issue
+                sh 'oc login --token=$OPENSHIFT_TOKEN --server=$OPENSHIFT_SERVER_URL --insecure-skip-tls-verify'
                 echo "Deployed to OpenShift Successfully!"
             }
+        }
         }
     }
 
