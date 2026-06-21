@@ -1,0 +1,4 @@
+fastapi
+uvicorn
+onnxruntime
+boto3
