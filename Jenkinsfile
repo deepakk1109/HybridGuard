@@ -26,17 +26,15 @@ pipeline {
         }
 
        stage('OpenShift Deploy') {
-    agent {
-        docker { image 'quay.io/openshift/origin-cli:latest' }
-    }
-    steps {
-        echo "Deploying to OpenShift..."
-        sh """
-          oc login --token=sha256~awArwFlNkyS12g8iOuYny31_vExu3uM-CWA8Fdyj8WI --server=https://api.rm1.0a51.p1.openshiftapps.com:6443
-        """
-        echo "Deployed to OpenShift Successfully!"
-    }
-}
+            steps {
+                echo "Deploying to OpenShift..."
+                sh '''
+                    export KUBECONFIG=$WORKSPACE/.kubeconfig
+                    oc login --token=sha256~awArwFlNkyS12g8iOuYny31_vExu3uM-CWA8Fdyj8WI --server=https://api.rm1.0a51.p1.openshiftapps.com:6443
+                '''
+                echo "Deployed to OpenShift Successfully!"
+            }
+        }
     }
 
     post {
