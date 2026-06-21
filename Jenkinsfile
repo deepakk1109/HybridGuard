@@ -15,17 +15,17 @@ pipeline {
             }
         }
             
-        
         stage('Docker Build & Push') {
             steps {
                 echo "Logging into Docker Hub..."
                 sh "echo \$DOCKER_CREDS_PSW | docker login -u \$DOCKER_CREDS_USR --password-stdin"
-                sh "docker build -t \$DOCKER_CREDS_USR/hybridguard:latest ."
-                sh "docker push \$DOCKER_CREDS_USR/hybridguard:latest"
-                echo "Docker Image Built and Pushed Successfully!"
+                sh '''
+                    # Push with a timeout limit or just let it try
+                    docker build --no-cache -t deepak1109/hybridguard:latest .
+                    docker push deepak1109/hybridguard:latest
+                '''
             }
         }
-
       stage('OpenShift Deploy') {
             steps {
                 echo "Deploying to OpenShift..."
