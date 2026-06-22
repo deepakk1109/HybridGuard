@@ -54,19 +54,13 @@ def health():
 async def predict_endpoint(payload: PredictionRequest):
     """
     Run fraud/anomaly detection on the given feature vector.
-    Steps:
-      1. Run ONNX model inference
-      2. Upload the prediction result to AWS S3
-      3. If fraud probability crosses threshold, publish an AWS SNS alert
     """
     start = time.time()
     try:
-        # ---- 🛠️ இன்புட்டை இங்கேயே 4D லிஸ்ட்டாக மாற்றுகிறோம் ----
-        # வெளியிலிருந்து வரும் [5000.0, 1.0, 0.0, 23.5] ஐ [[[[5000.0, 1.0, 0.0, 23.5]]]] ஆக மாற்றுகிறது
-        input_4d = [[[[float(x) for x in payload.features]]]]
+        # 🛠️ பிக்ஸ்: இங்க எந்த மாற்றமும் செய்யாமல் payload.features-ஐ அப்படியே அனுப்புங்க!
+        # ஏன்னா நம்ம model.py அதை அழகா 4D-ஆ மாத்திக்கும்.
+        result = predict(payload.features)
         
-        # 4D இன்புட்டை மாடலுக்கு அனுப்புகிறோம்
-        result = predict(input_4d)
     except Exception as exc:
         logger.exception("Model inference failed")
         raise HTTPException(status_code=500, detail=f"Inference error: {exc}") from exc
