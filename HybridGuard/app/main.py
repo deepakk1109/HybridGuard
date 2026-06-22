@@ -11,7 +11,7 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 import time
 import logging
 
-# 🛠️ தீபக், இங்கதான் மாத்தியிருக்கேன்: relative import-ஐ absolute import-ஆக மாத்தியாச்சு!
+
 from model import predict
 from aws_utils import upload_prediction, send_alert
 
@@ -50,7 +50,6 @@ def health():
     """Basic liveness/readiness check used by OpenShift probes."""
     return {"status": "ok", "platform": "OpenShift + AWS", "service": "HybridGuard"}
 
-
 @app.post("/predict", response_model=PredictionResponse)
 async def predict_endpoint(payload: PredictionRequest):
     """
@@ -62,7 +61,12 @@ async def predict_endpoint(payload: PredictionRequest):
     """
     start = time.time()
     try:
-        result = predict(payload.features)
+        # ---- 🛠️ இன்புட்டை இங்கேயே 4D லிஸ்ட்டாக மாற்றுகிறோம் ----
+        # வெளியிலிருந்து வரும் [5000.0, 1.0, 0.0, 23.5] ஐ [[[[5000.0, 1.0, 0.0, 23.5]]]] ஆக மாற்றுகிறது
+        input_4d = [[[[float(x) for x in payload.features]]]]
+        
+        # 4D இன்புட்டை மாடலுக்கு அனுப்புகிறோம்
+        result = predict(input_4d)
     except Exception as exc:
         logger.exception("Model inference failed")
         raise HTTPException(status_code=500, detail=f"Inference error: {exc}") from exc
@@ -98,6 +102,53 @@ async def predict_endpoint(payload: PredictionRequest):
         is_fraud=result["is_fraud"],
         s3_key=s3_key,
     )
+# @app.post("/predict", response_model=PredictionResponse)
+# async def predict_endpoint(payload: PredictionRequest):
+#     """
+#     Run fraud/anomaly detection on the given feature vector.
+#     Steps:
+#       1. Run ONNX model inference
+#       2. Upload the prediction result to AWS S3
+#       3. If fraud probability crosses threshold, publish an AWS SNS alert
+#     """
+#     start = time.time()
+#     try:
+#         result = predict(payload.features)
+#     except Exception as exc:
+#         logger.exception("Model inference failed")
+#         raise HTTPException(status_code=500, detail=f"Inference error: {exc}") from exc
+#     finally:
+#         PREDICTION_LATENCY.observe(time.time() - start)
+
+#     PREDICTIONS_TOTAL.inc()
+
+#     record = {
+#         "input_features": payload.features,
+#         "fraud_probability": result["fraud_probability"],
+#         "is_fraud": result["is_fraud"],
+#     }
+
+#     try:
+#         s3_key = upload_prediction(record)
+#     except Exception as exc:
+#         logger.exception("Failed to upload prediction to S3")
+#         s3_key = "upload-failed"
+
+#     if result["is_fraud"] or result["fraud_probability"] > FRAUD_ALERT_THRESHOLD:
+#         ANOMALIES_TOTAL.inc()
+#         try:
+#             send_alert(
+#                 f"HybridGuard Alert: fraud_probability={result['fraud_probability']:.3f} "
+#                 f"for input={payload.features}"
+#             )
+#         except Exception:
+#             logger.exception("Failed to send SNS alert")
+
+    # return PredictionResponse(
+    #     fraud_probability=result["fraud_probability"],
+    #     is_fraud=result["is_fraud"],
+    #     s3_key=s3_key,
+    # )
 
 
 @app.get("/metrics", response_class=PlainTextResponse)
