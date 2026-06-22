@@ -27,7 +27,7 @@ pipeline {
     steps {
         sh '''
             export KUBECONFIG=${WORKSPACE}/.kubeconfig
-           oc login --token=${OPENSHIFT_TOKEN} --server=https://api.rm1.0a51.p1.openshiftapps.com:6443
+            oc login --token=sha256~LdNJw8aBfHrby-qKbO0H2JSm83F9-ZYsMjiatsCjGX4 --server=https://api.rm1.0a51.p1.openshiftapps.com:6443
             oc project deepakrishnamoorthi-dev
             oc delete deployment hybridguard-app --ignore-not-found=true
             oc delete svc hybridguard-app --ignore-not-found=true
