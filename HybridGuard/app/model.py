@@ -27,49 +27,55 @@ def _get_session() -> ort.InferenceSession:
         logger.info("Loading ONNX model from %s", MODEL_PATH)
         _session = ort.InferenceSession(MODEL_PATH, providers=["CPUExecutionProvider"])
     return _session
-
 def predict(features: list[float]) -> dict:
     """
-    Run inference on a single feature vector with robust (1, 1, 28, 28) formatting.
+    Run inference on a single feature vector with robust (1, 1, 28, 28) formatting
+    and safe Sigmoid activation for raw classification scores.
     """
     session = _get_session()
     input_name = session.get_inputs()[0].name
 
     TOTAL_ELEMENTS = 784  # 28 * 28
     
-   
+    
     padded_features = list(features)
     if len(padded_features) < TOTAL_ELEMENTS:
         padded_features.extend([0.0] * (TOTAL_ELEMENTS - len(padded_features)))
     else:
         padded_features = padded_features[:TOTAL_ELEMENTS]
 
-    
+   
     matrix_2d = [padded_features[i:i + 28] for i in range(0, TOTAL_ELEMENTS, 28)]
-    
-    
     strict_4d_list = [[matrix_2d]]
-
     
     x = np.array(strict_4d_list, dtype=np.float32)
 
+   
     outputs = session.run(None, {input_name: x})
 
-    fraud_probability = 0.0
+    raw_score = 0.0
     try:
         proba = outputs[1]
         if isinstance(proba, list) and isinstance(proba[0], dict):
-            fraud_probability = float(proba[0].get(1, 0.0))
+            raw_score = float(proba[0].get(1, 0.0))
         else:
-            fraud_probability = float(np.array(proba)[0][-1])
+            raw_score = float(np.array(proba)[0][-1])
     except (IndexError, KeyError, TypeError):
         label = outputs[0][0]
         if isinstance(label, np.ndarray):
             label = label.flatten()[0]
-        fraud_probability = float(label)
+        raw_score = float(label)
+
+   
+    if raw_score < -20:
+        fraud_probability = 0.0
+    elif raw_score > 20:
+        fraud_probability = 1.0
+    else:
+      
+        fraud_probability = 1.0 / (1.0 + np.exp(-raw_score))
 
     return {
-        "fraud_probability": round(fraud_probability, 4),
+        "fraud_probability": round(float(fraud_probability), 4),
         "is_fraud": fraud_probability > 0.5,
     }
-
