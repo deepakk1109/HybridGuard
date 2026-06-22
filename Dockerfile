@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # COPY HybridGuard/app/ .
 ENV CACHE_BUSTER=2
 COPY HybridGuard/app/ .
-
+COPY HybridGuard/models/ /models/
 
 COPY HybridGuard/app/ .
 
