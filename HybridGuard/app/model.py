@@ -28,31 +28,16 @@ def _get_session() -> ort.InferenceSession:
         _session = ort.InferenceSession(MODEL_PATH, providers=["CPUExecutionProvider"])
     return _session
 
-
 def predict(features: list[float]) -> dict:
     """
-    Run inference on a single feature vector with strict (1, 1, 28, 28) formatting.
+    Run inference on a single feature vector using flexible 2D reshaping.
     """
     session = _get_session()
     input_name = session.get_inputs()[0].name
 
-    TOTAL_ELEMENTS = 784  
-    
-    
-    padded_features = list(features)
-    if len(padded_features) < TOTAL_ELEMENTS:
-        padded_features.extend([0.0] * (TOTAL_ELEMENTS - len(padded_features)))
-    else:
-        padded_features = padded_features[:TOTAL_ELEMENTS]
-
-    
-    matrix_2d = [padded_features[i:i + 28] for i in range(0, TOTAL_ELEMENTS, 28)]
-    
-    
-    strict_4d_list = [[matrix_2d]]
-
-    
-    x = np.array(strict_4d_list, dtype=np.float32)
+    # ⚡ கிளாட் சொன்ன அதே மேஜிக் பிக்ஸ்: டைனமிக் 2D வடிவத்திற்கு மாற்றுகிறோம்
+    input_array = np.array(features, dtype=np.float32)
+    x = input_array.reshape(1, -1)
 
     outputs = session.run(None, {input_name: x})
 
