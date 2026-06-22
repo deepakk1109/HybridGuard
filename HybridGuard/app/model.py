@@ -51,28 +51,24 @@ def predict(features: list[float]) -> dict:
     x = np.array(strict_4d_list, dtype=np.float32)
 
    
-    outputs = session.run(None, {input_name: x})
+  outputs = session.run(None, {input_name: x})
 
     raw_score = 0.0
     try:
-        proba = outputs[1]
-        if isinstance(proba, list) and isinstance(proba[0], dict):
-            raw_score = float(proba[0].get(1, 0.0))
-        else:
-            raw_score = float(np.array(proba)[0][-1])
-    except (IndexError, KeyError, TypeError):
-        label = outputs[0][0]
-        if isinstance(label, np.ndarray):
-            label = label.flatten()[0]
-        raw_score = float(label)
+        # மாடலோட அவுட்புட் ஸ்ட்ரக்சர் எதுவாக இருந்தாலும் அதன் முதல் வேல்யூவை தட்டையாக (Flatten) மாற்றுகிறோம்
+        raw_score = float(np.array(outputs[0]).flatten()[0])
+    except Exception:
+        raw_score = 0.0
 
-   
-    if raw_score < -20:
+    # 4. ⚡ அல்டிமேட் பிக்ஸ்: நெகட்டிவ் வேல்யூக்களை 0-1 க்குள் கன்வெர்ட் செய்கிறோம்
+    # வேல்யூ மைனஸில் மிக அதிகமாக இருந்தால் அது 0% (Not Fraud)
+    if raw_score <= -1.0:
         fraud_probability = 0.0
-    elif raw_score > 20:
+    # வேல்யூ பாசிட்டிவாக இருந்தால் அது 100% (Fraud)
+    elif raw_score >= 1.0:
         fraud_probability = 1.0
     else:
-      
+        # இடைப்பட்ட மதிப்புகளுக்கு மட்டும் Sigmoid அல்லது நார்மலைசேஷன்
         fraud_probability = 1.0 / (1.0 + np.exp(-raw_score))
 
     return {
