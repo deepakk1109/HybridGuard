@@ -70,5 +70,4 @@ def predict(features: list[float]) -> dict:
         "is_fraud": fraud_probability > 0.5,
     }
 
-#         "is_fraud": fraud_probability > 0.5,
-#     }
+
