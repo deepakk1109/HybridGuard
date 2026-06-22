@@ -50,30 +50,39 @@ def health():
     """Basic liveness/readiness check used by OpenShift probes."""
     return {"status": "ok", "platform": "OpenShift + AWS", "service": "HybridGuard"}
 
-@app.post("/predict", response_model=PredictionResponse)
-async def predict_endpoint(payload: PredictionRequest):
-    """
-    Run fraud/anomaly detection on the given feature vector.
-    """
-    start = time.time()
+@app.post("/predict")
+def predict_endpoint(payload: PredictionRequest):
     try:
-        # 🛠️ பிக்ஸ்: இங்க எந்த மாற்றமும் செய்யாமல் payload.features-ஐ அப்படியே அனுப்புங்க!
-        # ஏன்னா நம்ம model.py அதை அழகா 4D-ஆ மாத்திக்கும்.
+        # ⚡ பிக்ஸ்: லிஸ்ட்டை நேரடியாக model.py-க்கு அனுப்புகிறோம், பிராக்கெட் குழப்பம் இல்லை!
         result = predict(payload.features)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Inference error: {str(e)}")
+
+# @app.post("/predict", response_model=PredictionResponse)
+# async def predict_endpoint(payload: PredictionRequest):
+#     """
+#     Run fraud/anomaly detection on the given feature vector.
+#     """
+#     start = time.time()
+#     try:
+#         # 🛠️ பிக்ஸ்: இங்க எந்த மாற்றமும் செய்யாமல் payload.features-ஐ அப்படியே அனுப்புங்க!
+#         # ஏன்னா நம்ம model.py அதை அழகா 4D-ஆ மாத்திக்கும்.
+#         result = predict(payload.features)
         
-    except Exception as exc:
-        logger.exception("Model inference failed")
-        raise HTTPException(status_code=500, detail=f"Inference error: {exc}") from exc
-    finally:
-        PREDICTION_LATENCY.observe(time.time() - start)
+#     except Exception as exc:
+#         logger.exception("Model inference failed")
+#         raise HTTPException(status_code=500, detail=f"Inference error: {exc}") from exc
+#     finally:
+#         PREDICTION_LATENCY.observe(time.time() - start)
 
-    PREDICTIONS_TOTAL.inc()
+#     PREDICTIONS_TOTAL.inc()
 
-    record = {
-        "input_features": payload.features,
-        "fraud_probability": result["fraud_probability"],
-        "is_fraud": result["is_fraud"],
-    }
+#     record = {
+#         "input_features": payload.features,
+#         "fraud_probability": result["fraud_probability"],
+#         "is_fraud": result["is_fraud"],
+#     }
 
     try:
         s3_key = upload_prediction(record)
@@ -96,53 +105,7 @@ async def predict_endpoint(payload: PredictionRequest):
         is_fraud=result["is_fraud"],
         s3_key=s3_key,
     )
-# @app.post("/predict", response_model=PredictionResponse)
-# async def predict_endpoint(payload: PredictionRequest):
-#     """
-#     Run fraud/anomaly detection on the given feature vector.
-#     Steps:
-#       1. Run ONNX model inference
-#       2. Upload the prediction result to AWS S3
-#       3. If fraud probability crosses threshold, publish an AWS SNS alert
-#     """
-#     start = time.time()
-#     try:
-#         result = predict(payload.features)
-#     except Exception as exc:
-#         logger.exception("Model inference failed")
-#         raise HTTPException(status_code=500, detail=f"Inference error: {exc}") from exc
-#     finally:
-#         PREDICTION_LATENCY.observe(time.time() - start)
 
-#     PREDICTIONS_TOTAL.inc()
-
-#     record = {
-#         "input_features": payload.features,
-#         "fraud_probability": result["fraud_probability"],
-#         "is_fraud": result["is_fraud"],
-#     }
-
-#     try:
-#         s3_key = upload_prediction(record)
-#     except Exception as exc:
-#         logger.exception("Failed to upload prediction to S3")
-#         s3_key = "upload-failed"
-
-#     if result["is_fraud"] or result["fraud_probability"] > FRAUD_ALERT_THRESHOLD:
-#         ANOMALIES_TOTAL.inc()
-#         try:
-#             send_alert(
-#                 f"HybridGuard Alert: fraud_probability={result['fraud_probability']:.3f} "
-#                 f"for input={payload.features}"
-#             )
-#         except Exception:
-#             logger.exception("Failed to send SNS alert")
-
-    # return PredictionResponse(
-    #     fraud_probability=result["fraud_probability"],
-    #     is_fraud=result["is_fraud"],
-    #     s3_key=s3_key,
-    # )
 
 
 @app.get("/metrics", response_class=PlainTextResponse)
