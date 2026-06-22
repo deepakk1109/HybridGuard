@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir -r requirements.txt
 
 
-ENV CACHE_BUSTER=8
+ENV CACHE_BUSTER=9
 
 COPY HybridGuard/app/ .
 COPY HybridGuard/models/ /models/
