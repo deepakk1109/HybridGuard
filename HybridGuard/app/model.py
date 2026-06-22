@@ -31,34 +31,36 @@ def _get_session() -> ort.InferenceSession:
 
 def predict(features: list[float]) -> dict:
     """
-    Run inference on a single feature vector with 4D reshaping.
-
-    Returns:
-        {"fraud_probability": float, "is_fraud": bool}
+    Run inference on a single feature vector with strict (1, 1, 28, 28) reshaping.
     """
     session = _get_session()
     input_name = session.get_inputs()[0].name
 
-    # 🛠️ பிக்ஸ்: வெளியிலிருந்து வரும் லிஸ்ட்டை நேரடியாக 4D Tensor வடிவத்திற்கு (1, 1, 1, -1) மாற்றுகிறோம்
-    input_array = np.array(features, dtype=np.float32)
-    x = input_array.reshape(1, 1, 1, -1)
+    
+    TOTAL_ELEMENTS = 784  # 28 * 28
+    
+   
+    padded_features = list(features)
+    if len(padded_features) < TOTAL_ELEMENTS:
+        padded_features.extend([0.0] * (TOTAL_ELEMENTS - len(padded_features)))
+    else:
+        padded_features = padded_features[:TOTAL_ELEMENTS]
+
+    
+    input_array = np.array(padded_features, dtype=np.float32)
+    x = input_array.reshape(1, 1, 28, 28)
 
     outputs = session.run(None, {input_name: x})
 
-    # Most sklearn-onnx classifiers return [labels, probabilities]
-    # probabilities is usually a list of dicts like [{0: 0.9, 1: 0.1}]
     fraud_probability = 0.0
     try:
         proba = outputs[1]
         if isinstance(proba, list) and isinstance(proba[0], dict):
             fraud_probability = float(proba[0].get(1, 0.0))
         else:
-            # fallback: assume proba is an array [[p0, p1]]
             fraud_probability = float(np.array(proba)[0][-1])
     except (IndexError, KeyError, TypeError):
-        # fallback: use the raw label output as a 0/1 probability
         label = outputs[0][0]
-        # 🛠️ 4D அவுட்புட்டாக இருந்தால், அதன் உண்மையான மதிப்பை எடுக்க லேயர்களைக் குறைக்கிறோம்
         if isinstance(label, np.ndarray):
             label = label.flatten()[0]
         fraud_probability = float(label)
