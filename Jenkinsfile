@@ -31,7 +31,8 @@ pipeline {
         AWS_SECRET = credentials('AWS_SECRET_ACCESS_KEY')
     }
     steps {
-        sh "oc set env deployment/hybridguard-app AWS_ACCESS_KEY_ID=${AWS_ACCESS} AWS_SECRET_ACCESS_KEY=${AWS_SECRET} AWS_S3_BUCKET_NAME='உங்க_பக்கெட்_பெயர்'"
+        sh "oc set env deployment/hybridguard-app AWS_ACCESS_KEY_ID=${AWS_ACCESS} AWS_SECRET_ACCESS_KEY=${AWS_SECRET} AWS_S3_BUCKET_NAME='
+hybridguard-storage-9927'"
     }
 }
     }
