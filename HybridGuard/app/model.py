@@ -31,15 +31,14 @@ def _get_session() -> ort.InferenceSession:
 
 def predict(features: list[float]) -> dict:
     """
-    Run inference on a single feature vector with strict (1, 1, 28, 28) reshaping.
+    Run inference on a single feature vector with strict (1, 1, 28, 28) formatting.
     """
     session = _get_session()
     input_name = session.get_inputs()[0].name
 
+    TOTAL_ELEMENTS = 784  
     
-    TOTAL_ELEMENTS = 784  # 28 * 28
     
-   
     padded_features = list(features)
     if len(padded_features) < TOTAL_ELEMENTS:
         padded_features.extend([0.0] * (TOTAL_ELEMENTS - len(padded_features)))
@@ -47,8 +46,13 @@ def predict(features: list[float]) -> dict:
         padded_features = padded_features[:TOTAL_ELEMENTS]
 
     
-    input_array = np.array(padded_features, dtype=np.float32)
-    x = input_array.reshape(1, 1, 28, 28)
+    matrix_2d = [padded_features[i:i + 28] for i in range(0, TOTAL_ELEMENTS, 28)]
+    
+    
+    strict_4d_list = [[matrix_2d]]
+
+    
+    x = np.array(strict_4d_list, dtype=np.float32)
 
     outputs = session.run(None, {input_name: x})
 
