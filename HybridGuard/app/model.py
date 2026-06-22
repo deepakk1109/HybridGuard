@@ -30,14 +30,28 @@ def _get_session() -> ort.InferenceSession:
 
 def predict(features: list[float]) -> dict:
     """
-    Run inference on a single feature vector using flexible 2D reshaping.
+    Run inference on a single feature vector with robust (1, 1, 28, 28) formatting.
     """
     session = _get_session()
     input_name = session.get_inputs()[0].name
 
-    # ⚡ கிளாட் சொன்ன அதே மேஜிக் பிக்ஸ்: டைனமிக் 2D வடிவத்திற்கு மாற்றுகிறோம்
-    input_array = np.array(features, dtype=np.float32)
-    x = input_array.reshape(1, -1)
+    TOTAL_ELEMENTS = 784  # 28 * 28
+    
+   
+    padded_features = list(features)
+    if len(padded_features) < TOTAL_ELEMENTS:
+        padded_features.extend([0.0] * (TOTAL_ELEMENTS - len(padded_features)))
+    else:
+        padded_features = padded_features[:TOTAL_ELEMENTS]
+
+    
+    matrix_2d = [padded_features[i:i + 28] for i in range(0, TOTAL_ELEMENTS, 28)]
+    
+    
+    strict_4d_list = [[matrix_2d]]
+
+    
+    x = np.array(strict_4d_list, dtype=np.float32)
 
     outputs = session.run(None, {input_name: x})
 
@@ -58,5 +72,4 @@ def predict(features: list[float]) -> dict:
         "fraud_probability": round(fraud_probability, 4),
         "is_fraud": fraud_probability > 0.5,
     }
-
 
