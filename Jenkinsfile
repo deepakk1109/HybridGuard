@@ -23,23 +23,23 @@ pipeline {
             }
         }
 
-        stage('OpenShift Deploy') {
-            steps {
-                sh """
-                    export KUBECONFIG=${WORKSPACE}/.kubeconfig
-                    oc login --token=${OPENSHIFT_TOKEN} --server=${OPENSHIFT_SERVER_URL}
-                    oc project deepakrishnamoorthi-dev
-                    oc delete deployment hybridguard-app --ignore-not-found=true
-                    oc delete svc hybridguard-app --ignore-not-found=true
-                    oc delete route hybridguard-app --ignore-not-found=true
-                    oc new-app deepak1109/hybridguard:latest --name=hybridguard-app
-                    sleep 5
-                    oc expose deployment hybridguard-app --port=8080 --target-port=8080 --name=hybridguard-app
-                    oc expose svc/hybridguard-app
-                    oc rollout status deployment/hybridguard-app --timeout=120s
-                """
-            }
-        }
+       stage('OpenShift Deploy') {
+    steps {
+        sh '''
+            export KUBECONFIG=${WORKSPACE}/.kubeconfig
+            oc login --token=${OPENSHIFT_TOKEN} --server=https://api.rm1.0a51.p1.openshiftapps.com:6443 --insecure-skip-tls-verify
+            oc project deepakrishnamoorthi-dev
+            oc delete deployment hybridguard-app --ignore-not-found=true
+            oc delete svc hybridguard-app --ignore-not-found=true
+            oc delete route hybridguard-app --ignore-not-found=true
+            oc new-app deepak1109/hybridguard:latest --name=hybridguard-app
+            sleep 5
+            oc expose deployment hybridguard-app --port=8080 --target-port=8080 --name=hybridguard-app
+            oc expose svc/hybridguard-app
+            oc rollout status deployment/hybridguard-app --timeout=120s
+        '''
+    }
+}
     }
 
     post {
