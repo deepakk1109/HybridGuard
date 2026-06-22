@@ -11,8 +11,9 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 import time
 import logging
 
-from .model import predict
-from .aws_utils import upload_prediction, send_alert
+# 🛠️ தீபக், இங்கதான் மாத்தியிருக்கேன்: relative import-ஐ absolute import-ஆக மாத்தியாச்சு!
+from model import predict
+from aws_utils import upload_prediction, send_alert
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("hybridguard")
