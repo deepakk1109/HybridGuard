@@ -30,7 +30,7 @@ pipeline {
                 echo "Deploying to OpenShift..."
                 sh '''
                     export KUBECONFIG=${WORKSPACE}/.kubeconfig
-                    oc login --token=${OPENSHIFT_TOKEN} --server=https://api.rm1.0a51.p1.openshiftapps.com:6443
+                    oc login --token=${OPENSHIFT_TOKEN} --server="${OPENSHIFT_SERVER_URL}" --insecure-skip-tls-verify=true
                     oc project deepakrishnamoorthi-dev
                     oc delete deployment hybridguard-app --ignore-not-found=true
                     oc delete svc hybridguard-app --ignore-not-found=true
