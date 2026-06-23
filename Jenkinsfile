@@ -20,15 +20,16 @@ pipeline {
                 echo "Logging into Docker Hub..."
                 sh "echo \$DOCKER_CREDS_PSW | docker login -u \$DOCKER_CREDS_USR --password-stdin"
                 
-                echo "Building Image with BuildKit..."
-                sh "export DOCKER_BUILDKIT=1 && docker build --no-cache -t \$DOCKER_CREDS_USR/hybridguard:latest ."
+                echo "Building Image (Normal Builder without BuildKit)..."
+                // மெமரி எரர் வராம இருக்க --no-cache வச்சு நார்மலா பில்டு பண்றோம்
+                sh "docker build --no-cache -t \$DOCKER_CREDS_USR/hybridguard:latest ."
                 
-                echo "Pushing Image to Docker Hub (with retry logic)..."
-                
+                echo "Pushing Image to Docker Hub (with safe retry logic)..."
+                // 400 Bad request நெட்வொர்க் எரர் வராம இருக்க 3 முறை ரீட்ரை பண்ணும் லாஜிக்
                 sh """
                     docker push \$DOCKER_CREDS_USR/hybridguard:latest || \
-                    (sleep 5 && docker push \$DOCKER_CREDS_USR/hybridguard:latest) || \
-                    (sleep 10 && docker push \$DOCKER_CREDS_USR/hybridguard:latest)
+                    (sleep 10 && docker push \$DOCKER_CREDS_USR/hybridguard:latest) || \
+                    (sleep 20 && docker push \$DOCKER_CREDS_USR/hybridguard:latest)
                 """
                 echo "Docker Image Built and Pushed Successfully!"
             }
