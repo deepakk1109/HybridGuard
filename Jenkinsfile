@@ -19,9 +19,17 @@ pipeline {
             steps {
                 echo "Logging into Docker Hub..."
                 sh "echo \$DOCKER_CREDS_PSW | docker login -u \$DOCKER_CREDS_USR --password-stdin"
-                // --no-cache வச்சு லோக்கல் கேச் எரரைத் தவிர்க்கிறோம்!
-                sh "docker build --no-cache -t \$DOCKER_CREDS_USR/hybridguard:latest ."
-                sh "docker push \$DOCKER_CREDS_USR/hybridguard:latest"
+                
+                echo "Building Image with BuildKit..."
+                sh "export DOCKER_BUILDKIT=1 && docker build --no-cache -t \$DOCKER_CREDS_USR/hybridguard:latest ."
+                
+                echo "Pushing Image to Docker Hub (with retry logic)..."
+                
+                sh """
+                    docker push \$DOCKER_CREDS_USR/hybridguard:latest || \
+                    (sleep 5 && docker push \$DOCKER_CREDS_USR/hybridguard:latest) || \
+                    (sleep 10 && docker push \$DOCKER_CREDS_USR/hybridguard:latest)
+                """
                 echo "Docker Image Built and Pushed Successfully!"
             }
         }
