@@ -32,15 +32,19 @@ pipeline {
                 echo "Logging into OpenShift Cluster..."
                 sh "oc login ${OPENSHIFT_SERVER_URL} --token=\$OPENSHIFT_TOKEN --insecure-skip-tls-verify"
                 
-                echo "Injecting AWS S3 Variables directly into OpenShift..."
-                // ⚠️ தீபக், கீழே உள்ள 'உங்க_AWS_ACCESS_KEY_ID' மற்றும் 'உங்க_AWS_SECRET_ACCESS_KEY' இடத்துல 
-                // நீங்க AWS-ல இருந்து எடுத்த உங்க உண்மையான சாவிகளை (Keys) அப்படியே டைப் பண்ணிடுங்க!
-                sh """
-                    oc set env deployment/hybridguard-app \
-                    AWS_ACCESS_KEY_ID='உங்க_AWS_ACCESS_KEY_ID' \
-                    AWS_SECRET_ACCESS_KEY='உங்க_AWS_SECRET_ACCESS_KEY' \
-                    AWS_S3_BUCKET_NAME='hybridguard-storage-9927'
-                """
+                echo "Injecting AWS S3 Variables safely using Jenkins Credentials..."
+                // 🎯 தீபக், இங்க கவனிங்க! 'withCredentials' பயன்படுத்தி உங்க சாவிகளை ரகசியமா ஓபன்ஷிஃப்ட்டுக்கு அனுப்புறோம்!
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'MY_AWS_ACC'),
+                    string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'MY_AWS_SEC')
+                ]) {
+                    sh """
+                        oc set env deployment/hybridguard-app \
+                        AWS_ACCESS_KEY_ID="\$MY_AWS_ACC" \
+                        AWS_SECRET_ACCESS_KEY="\$MY_AWS_SEC" \
+                        AWS_S3_BUCKET_NAME="hybridguard-storage-9927"
+                    """
+                }
                 
                 echo "Triggering Rollout to apply new AWS configurations..."
                 sh "oc rollout restart deployment/hybridguard-app"
