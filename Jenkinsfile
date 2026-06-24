@@ -33,7 +33,7 @@ pipeline {
                 sh "oc login ${OPENSHIFT_SERVER_URL} --token=\$OPENSHIFT_TOKEN --insecure-skip-tls-verify"
                 
                 echo "Injecting AWS S3 Variables safely using Jenkins Credentials..."
-                // 🎯 தீபக், இங்க கவனிங்க! 'withCredentials' பயன்படுத்தி உங்க சாவிகளை ரகசியமா ஓபன்ஷிஃப்ட்டுக்கு அனுப்புறோம்!
+                
                 withCredentials([
                     string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'MY_AWS_ACC'),
                     string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'MY_AWS_SEC')
