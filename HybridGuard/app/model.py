@@ -50,8 +50,7 @@ def predict(features: list[float]) -> dict:
     
     x = np.array(strict_4d_list, dtype=np.float32)
 
-   
-  outputs = session.run(None, {input_name: x})
+    outputs = session.run(None, {input_name: x})
 
     raw_score = 0.0
     try:
