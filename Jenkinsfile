@@ -19,13 +19,16 @@ pipeline {
             }
         }
 
-        stage('Run locally') {
-            steps {
-                sh 'docker stop hybridguard-app || true'
-                sh 'docker rm hybridguard-app || true'
-                sh 'docker run -d -p 8080:80 --name hybridguard-app hybridguard:latest'
-            }
-        }
+       stage('Run locally') {
+    steps {
+        sh 'docker stop hybridguard-app || true'
+        sh 'docker rm hybridguard-app || true'
+        
+        
+        sh 'docker run -d -p 8081:8080 --name hybridguard-app hybridguard:latest'
+        echo 'Application Deployed Locally on Port 8081!'
+    }
+}
     } // <-- This closes the stages block
 
     post {
