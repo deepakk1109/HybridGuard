@@ -5,7 +5,7 @@ Runs on Red Hat OpenShift, integrates with AWS S3 + SNS (no CloudWatch).
 """
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, RedirectResponse  # 👈 1. RedirectResponse inga import pannirukom
 from pydantic import BaseModel, Field
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 import time
@@ -44,6 +44,12 @@ class PredictionResponse(BaseModel):
     s3_key: str
 
 
+
+@app.get("/", include_in_schema=False)
+def read_root():
+    return RedirectResponse(url="/docs")
+
+
 @app.get("/health")
 def health():
     """Basic liveness/readiness check used by OpenShift probes."""
@@ -57,7 +63,7 @@ async def predict_endpoint(payload: PredictionRequest):
     """
     start = time.time()
     try:
-        # ⚡ மாடல் பிரெடிக்ஷன் - payload.features நேரடியாகப் போகிறது
+        
         result = predict(payload.features)
         
     except Exception as exc:
@@ -68,7 +74,7 @@ async def predict_endpoint(payload: PredictionRequest):
 
     PREDICTIONS_TOTAL.inc()
 
-    # S3 மற்றும் SNS-க்காக ரெக்கார்டு தயார் செய்கிறோம்
+    
     record = {
         "input_features": payload.features,
         "fraud_probability": result["fraud_probability"],
@@ -102,7 +108,6 @@ async def predict_endpoint(payload: PredictionRequest):
 def metrics():
     """Prometheus scrape endpoint."""
     return PlainTextResponse(generate_latest(), media_type=CONTENT_TYPE_LATEST)
-
 # @app.post("/predict", response_model=PredictionResponse)
 # async def predict_endpoint(payload: PredictionRequest):
 #     """
